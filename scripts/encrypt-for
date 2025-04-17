@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# encrypt-for github_user file1 file2 file3
+set -e
+set -x
+
+TEMPFILE=$(mktemp) || exit 1
+
+curl "https://github.com/$1.keys" >> "$TEMPFILE"
+
+shift
+while [ $# -gt 0 ]; do
+  age --encrypt --armor --recipients-file "$TEMPFILE" --output "$1.age" "$1"
+  shift
+done

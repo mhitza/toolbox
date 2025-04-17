@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# ssh-delivery file_or_directory host
+set -e
+set -x
+
+scp -r "$1" "$2":~/
+ssh "$2"

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# decrypt-mine file1.age file2.age
+set -e
+set -x
+
+while [ $# -gt 0 ]; do
+  age --decrypt --identity "$HOME/.ssh/id_ed25519" --output "${1%.age}" "$1"
+  shift
+done
