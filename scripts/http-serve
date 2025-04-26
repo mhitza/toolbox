@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -e
+set -x
+
+miniserve --interfaces 127.0.0.1 --port 13000 --enable-tar-gz --hidden --show-wget-footer --color-scheme monokai .

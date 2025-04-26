@@ -3,5 +3,11 @@
 set -e
 set -x
 
-scp -r "$1" "$2":~/
+target=$1
+
+if [ -d "$1" ]; then
+  target="$1.tgz"
+  tar cf "$target" "$1"
+fi
+scp -r "$target" "$2":~/
 ssh "$2"

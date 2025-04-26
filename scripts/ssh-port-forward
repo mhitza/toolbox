@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -e
+set -x
+
+ssh -O forward -L "[::1]:$1:127.0.0.1:$1" $2
