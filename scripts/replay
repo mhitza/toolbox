@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -e
+set -x
+
+recordings_dir="$HOME/.cache/toolbox-recordings"
+filename=$1
+
+if [[ "$filename" != /* ]]; then
+  recordings_file="$recordings_dir/$filename"
+else
+  recordings_file="$1"
+fi
+
+scriptreplay -t "$recordings_file.timing" "$recordings_file"

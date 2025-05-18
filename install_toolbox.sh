@@ -75,3 +75,6 @@ symlink_local "$target_scripts" decrypt-mine
 symlink_local "$target_scripts" ssh-delivery
 symlink_local "$target_scripts" ssh-port-forward
 symlink_local "$target_scripts" http-serve
+symlink_local "$target_scripts" record
+symlink_local "$target_scripts" replay
+symlink_local "$target_scripts" list-recordings

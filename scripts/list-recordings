@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+recordings_dir="$HOME/.cache/toolbox-recordings"
+
+if [ ! -d "$recordings_dir" ]; then
+    mkdir -p "$recordings_dir"
+fi
+
+ls -1 "$recordings_dir" | grep -v "\.timing$"

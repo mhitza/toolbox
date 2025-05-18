@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -e
+set -x
+recordings_dir="$HOME/.cache/toolbox-recordings"
+
+if [ ! -d "$recordings_dir" ]; then
+    mkdir -p "$recordings_dir"
+fi
+
+timestamp=$(date +"%m-%d---%H:%M:%S")
+recording="$recordings_dir/$timestamp---$USER---$$.log"
+
+script --quiet --timing="$recording.timing" "$recording"
