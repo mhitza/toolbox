@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -o pipefail
+
+response=$(curl -s -X POST "$LLM_URL/v1/chat/completions" \
+  -H "Content-Type: application/json" \
+  -d "{ \"messages\": [{\"role\": \"user\", \"content\": \"$*\"}] }")
+
+echo "$response" | jq -r '.choices[0].message.content'
