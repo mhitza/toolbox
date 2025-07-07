@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -o pipefail
+set -x
+
+TEMP_FILE=$(mktemp)
+
+git diff $* > "$TEMP_FILE"
+
+if [ -s "$TEMP_FILE" ]; then
+    systemd-run --user --on-active=2min --unit=del-tempfile-$RANDOM /bin/rm "$TEMP_FILE"
+    curl -X POST -d "@$TEMP_FILE" $LLM_URL/describe-diff
+fi

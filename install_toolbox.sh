@@ -79,3 +79,4 @@ symlink_local "$target_scripts" record
 symlink_local "$target_scripts" replay
 symlink_local "$target_scripts" list-recordings
 symlink_local "$target_scripts" ask-llm
+symlink_local "$target_scripts" describe-diff
