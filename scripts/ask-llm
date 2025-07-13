@@ -1,9 +1,11 @@
 #!/bin/bash
 
 set -o pipefail
+start_time=$(date +%s)
 
-response=$(curl -s -X POST "$LLM_URL/v1/chat/completions" \
+curl -s -N -X POST "$LLM_URL/v1/chat/completions" \
   -H "Content-Type: application/json" \
-  -d "{ \"messages\": [{\"role\": \"user\", \"content\": \"$*\"}] }")
+  -d "{ \"messages\": [{\"role\": \"user\", \"content\": \"$*\"}], \"stream\":true }"
 
-echo "$response" | jq -r '.choices[0].message.content'
+end_time=$(date +%s)
+printf '\n%ds\n' $(($end_time - $start_time))
