@@ -54,7 +54,6 @@ shopt -s expand_aliases
 
 target_bin="$PWD/bin"
 target_scripts="$PWD/scripts"
-
 alias eget_local="eget --to \"$target_bin\""
 function symlink_local() {
   ln -s "$1/$2" "$INSTALL_DIR/$2"
@@ -68,6 +67,9 @@ symlink_local "$target_bin" wormhole-william
 
 eget_local svenstaro/miniserve
 symlink_local "$target_bin" miniserve
+
+download "https://beyondgrep.com/ack-v3.9.0" && mv ack-v3.9.0 "$target_bin/ack" && chmod +x "$target_bin/ack"
+symlink_local "$target_bin" ack
 
 
 symlink_local "$target_scripts" encrypt-for
