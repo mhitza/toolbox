@@ -1,0 +1,61 @@
+setopt autonamedirs autocd
+setopt autopushd pushdignoredups pushdsilent pushdtohome
+setopt appendhistory sharehistory histignorealldups histreduceblanks histignorespace extendedhistory
+HISTFILE=~/.histfile
+HISTSIZE=1000
+SAVEHIST=1000
+HISTORY_IGNORE='cd *'
+
+bindkey -e
+bindkey '^R' history-incremental-search-backward
+bindkey '^F' history-incremental-search-forward
+
+autoload edit-command-line
+zle -N edit-command-line
+bindkey '^x^e' edit-command-line
+
+autoload -Uz compinit && compinit
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+
+setopt promptsubst
+autoload -Uz colors && colors
+autoload -Uz vcs_info
+zstyle ':vcs_info:*' enable git
+zstyle ':vcs_info:*' formats ' %b% '
+
+precmd () {
+  print ""
+  vcs_info > /dev/null
+  echo -ne "\e]0;$PWD\a"
+}
+
+export PROMPT='%~%{$fg_bold[red]%}${vcs_info_msg_0_}%{$reset_color%} » '
+
+
+export XDG_CONFIG_HOME=$HOME/.config
+export XDG_DATA_HOME=$HOME/.local/share
+export EDITOR=/usr/bin/vim
+export MERGE=/usr/bin/meld
+export W=$HOME/Workspace
+export MYSQL_HISTFILE=/dev/null
+export NODE_REPL_HISTORY=""
+export LESSHISTFILE=/dev/null
+export XDEBUG_SESSION=1
+export COMPOSER_MEMORY_LIMIT=-1
+
+alias ls="ls --color=auto"
+alias l="ls -lah --color=auto"
+
+alias -g A='| awk '
+alias -g G='| grep -i '
+alias -g H='| head '
+alias -g L='| less'
+alias -g T='| tee '
+alias -g X='| xargs '
+
+
+#
+export PATH="$HOME/.local/bin:$PATH"
+alias -g recordings="$HOME/.cache/toolbox-recordings"
+
+[ -f ~/.zshrc_local ] && [ "$(stat -L -c "%a" ~/.zshrc_local)" = "400" ] && source ~/.zshrc_local
