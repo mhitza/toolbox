@@ -53,6 +53,7 @@ alias -g L='| less'
 alias -g T='| tee '
 alias -g X='| xargs '
 
+alias ack-symfony="ack --ignore-dir=var --ignore-dir=vendor --ignore-dir=node_modules --ignore-dir=public/build --type-add=twig:ext:twig --smart-case"
 
 #
 export PATH="$HOME/.local/bin:$PATH"
