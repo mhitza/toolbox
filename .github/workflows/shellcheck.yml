@@ -1,3 +1,7 @@
+# Shellcheck workflow for pull requests
+# Runs shellcheck on changed shell scripts and annotates issues in PR interface
+# Triggers on changes to: *.sh, *.bash, scripts/*, install_toolbox.sh
+
 name: Shellcheck
 
 on:

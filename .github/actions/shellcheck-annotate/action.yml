@@ -37,9 +37,14 @@ runs:
         for file in $CHANGED_FILES; do
           if [[ -f "$file" ]]; then
             # Check for shell scripts by extension, path, or shebang
+            IS_SHELL=false
             if [[ "$file" == *.sh ]] || [[ "$file" == *.bash ]] || [[ "$file" == scripts/* ]] || [[ "$file" == "install_toolbox.sh" ]]; then
-              SHELL_FILES="$SHELL_FILES $file"
+              IS_SHELL=true
             elif head -n1 "$file" 2>/dev/null | grep -qE "^#!.*/(bash|sh)"; then
+              IS_SHELL=true
+            fi
+            
+            if [[ "$IS_SHELL" == "true" ]]; then
               SHELL_FILES="$SHELL_FILES $file"
             fi
           fi
