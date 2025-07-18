@@ -1,0 +1,24 @@
+name: Shellcheck
+
+on:
+  pull_request:
+    paths:
+      - '**.sh'
+      - '**.bash'
+      - 'scripts/**'
+      - 'install_toolbox.sh'
+
+jobs:
+  shellcheck:
+    name: Shellcheck Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Shellcheck with annotations
+        uses: ./.github/actions/shellcheck-annotate
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,90 @@
+name: 'Shellcheck with PR Annotations'
+description: 'Run shellcheck on shell scripts and annotate PR with issues'
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Install shellcheck
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y shellcheck
+
+    - name: Get changed shell files
+      shell: bash
+      id: changed-files
+      run: |
+        # Get the list of changed files in this PR
+        echo "Finding changed shell files..."
+        
+        # Get changed files between base and head
+        CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+        
+        # Filter for shell scripts
+        SHELL_FILES=""
+        for file in $CHANGED_FILES; do
+          if [[ "$file" == *.sh ]] || [[ "$file" == *.bash ]] || [[ "$file" == scripts/* ]] || [[ "$file" == "install_toolbox.sh" ]]; then
+            if [[ -f "$file" ]]; then
+              # Check if it's actually a shell script by looking at shebang or file command
+              if head -n1 "$file" | grep -qE "^#!.*/(bash|sh)" || file "$file" | grep -q "shell script"; then
+                SHELL_FILES="$SHELL_FILES $file"
+              fi
+            fi
+          fi
+        done
+        
+        echo "shell-files<<EOF" >> $GITHUB_OUTPUT
+        echo "$SHELL_FILES" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        if [[ -n "$SHELL_FILES" ]]; then
+          echo "Found shell files: $SHELL_FILES"
+        else
+          echo "No shell files found in changed files"
+        fi
+
+    - name: Run shellcheck and create annotations
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        SHELL_FILES="${{ steps.changed-files.outputs.shell-files }}"
+        
+        if [[ -z "$SHELL_FILES" ]]; then
+          echo "No shell files to check"
+          exit 0
+        fi
+        
+        echo "Running shellcheck on: $SHELL_FILES"
+        
+        # Run shellcheck and capture output
+        EXIT_CODE=0
+        for file in $SHELL_FILES; do
+          echo "Checking $file..."
+          
+          # Run shellcheck with JSON output for easier parsing
+          if ! shellcheck_output=$(shellcheck -f json "$file" 2>&1); then
+            EXIT_CODE=1
+          fi
+          
+          # If there are issues, create annotations
+          if [[ -n "$shellcheck_output" ]] && [[ "$shellcheck_output" != "[]" ]]; then
+            echo "$shellcheck_output" | jq -r '.[] | 
+              "::error file=" + .file + 
+              ",line=" + (.line | tostring) + 
+              ",col=" + (.column | tostring) + 
+              ",title=Shellcheck " + .level + " (SC" + (.code | tostring) + ")" +
+              "::" + .message'
+          fi
+        done
+        
+        # Also run a summary check for overall status
+        if [[ $EXIT_CODE -ne 0 ]]; then
+          echo "::error::Shellcheck found issues in one or more shell scripts"
+          exit 1
+        else
+          echo "::notice::All shell scripts passed shellcheck validation"
+        fi
