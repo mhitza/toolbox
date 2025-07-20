@@ -29,6 +29,20 @@ precmd () {
   echo -ne "\e]0;$PWD\a"
 }
 
+preexec () {
+  if [[ $@ == "#"* ]]; then
+    ask-llm "$@"
+  fi
+}
+
+# https://stackoverflow.com/questions/30028730/how-to-prevent-execution-of-command-in-zsh
+command_not_found_handler () {
+  if [[ $1 == "#"* ]]; then
+    return 0
+  fi
+  return 1
+}
+
 export PROMPT='%~%{$fg_bold[red]%}${vcs_info_msg_0_}%{$reset_color%} » '
 
 
