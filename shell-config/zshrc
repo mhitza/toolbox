@@ -4,7 +4,7 @@ setopt appendhistory sharehistory histignorealldups histreduceblanks histignores
 HISTFILE=~/.histfile
 HISTSIZE=1000
 SAVEHIST=1000
-HISTORY_IGNORE='cd *'
+HISTORY_IGNORE='cd *:#*'
 
 bindkey -e
 bindkey '^R' history-incremental-search-backward
@@ -56,9 +56,9 @@ export NODE_REPL_HISTORY=""
 export LESSHISTFILE=/dev/null
 export XDEBUG_SESSION=1
 export COMPOSER_MEMORY_LIMIT=-1
+export PAGER="less -R"
 
-alias ls="ls --color=auto"
-alias l="ls -lah --color=auto"
+alias ls="ls -lah --color=always | ${PAGER:-more}"
 
 alias -g A='| awk '
 alias -g G='| grep -i '
@@ -70,7 +70,7 @@ alias -g X='| xargs '
 alias ack-symfony="ack --ignore-dir=var --ignore-dir=vendor --ignore-dir=node_modules --ignore-dir=public/build --type-add=twig:ext:twig --smart-case"
 
 #
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="$PATH:$HOME/.local/bin"
 alias -g recordings="$HOME/.cache/toolbox-recordings"
 
 [ -f ~/.zshrc_local ] && [ "$(stat -L -c "%a" ~/.zshrc_local)" = "400" ] && source ~/.zshrc_local
