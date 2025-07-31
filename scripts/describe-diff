@@ -3,7 +3,7 @@
 set -o pipefail
 set -x
 
-TEMP_FILE=$(mktemp)
+TEMP_FILE=$(mktemp --tmpdir=$XDG_RUNTIME_DIR)
 
 git diff --diff-algorithm=histogram $* > "$TEMP_FILE"
 
