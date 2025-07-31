@@ -58,7 +58,7 @@ export XDEBUG_SESSION=1
 export COMPOSER_MEMORY_LIMIT=-1
 export PAGER="less -R"
 
-alias ls="ls -lah --color=always | ${PAGER:-more}"
+alias ks="ls -lah --color=always | ${PAGER:-more}"
 
 alias -g A='| awk '
 alias -g G='| grep -i '
