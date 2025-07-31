@@ -5,9 +5,9 @@ set -x
 
 TEMP_FILE=$(mktemp)
 
-git diff $* > "$TEMP_FILE"
+git diff --diff-algorithm=histogram $* > "$TEMP_FILE"
 
 if [ -s "$TEMP_FILE" ]; then
     systemd-run --user --on-active=2min --unit=del-tempfile-$RANDOM /bin/rm "$TEMP_FILE"
-    curl -X POST -H "Content-Type: application/octet-stream" --data-binary "@$TEMP_FILE" $LLM_URL/describe-diff
+    curl -s -N -X POST -H "Content-Type: application/octet-stream" --data-binary "@$TEMP_FILE" $LLM_URL/describe-diff
 fi
