@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+curl -s -X POST -H "Authorization: Bot $KAGI_TOKEN" \
+    -H "Content-Type: application/json" \
+    --data "{\"query\": \"$*\"}" https://kagi.com/api/v0/fastgpt \
+    | jq -r '.data.output,"\n",(.data.references[] | "\(.title): \(.url)")'
