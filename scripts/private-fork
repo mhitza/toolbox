@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+set -o pipefail
+set -x
+
+URL="$1"
+
+if [[ -z "$URL" ]]; then
+  echo "Usage: $0 <github-repo-url>"
+  exit 1
+fi
+
+OWNER_REPO=$(echo "$URL" | sed -E 's#(git@|https://|http://)?github.com[/:]([^/]+/[^/.]+).*#\2#')
+
+if [[ ! "$OWNER_REPO" =~ .+/.+ ]]; then
+  echo "Could not extract owner/repo from URL: $URL"
+  exit 2
+fi
+
+pushd /tmp
+gh repo clone "$OWNER_REPO"
+
+REPO=$(echo "$OWNER_REPO" | sed 's#.*/##')
+
+FAUX_FORK_URL=$(gh repo create "$REPO" --private | sed -n 's|.*\(https://github\.com/[^ ]*\).*|\1|p')
+
+cd "$REPO"
+DEFAULT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+git remote rename origin upstream
+
+SELF=$(gh auth status | sed -n 's/.*account \([^ ]*\) (.*/\1/p')
+git remote add origin "git@github.com:$SELF/$REPO.git"
+git push --set-upstream origin "$DEFAULT_BRANCH"
