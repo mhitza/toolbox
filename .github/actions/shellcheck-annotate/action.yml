@@ -1,0 +1,122 @@
+name: 'Shellcheck with PR Annotations'
+description: 'Run shellcheck on shell scripts and annotate PR with issues'
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Install shellcheck
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y shellcheck
+
+    - name: Get changed shell files
+      shell: bash
+      id: changed-files
+      run: |
+        # Get the list of changed files in this PR
+        echo "Finding changed shell files..."
+        
+        # Get changed files between base and head
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          CHANGED_FILES=$(git diff --name-only "$BASE_SHA".."$HEAD_SHA")
+        else
+          # Fallback for other events
+          CHANGED_FILES=$(git diff --name-only HEAD~1..HEAD)
+        fi
+        
+        echo "Changed files: $CHANGED_FILES"
+        
+        # Filter for shell scripts
+        SHELL_FILES=""
+        for file in $CHANGED_FILES; do
+          if [[ -f "$file" ]]; then
+            # Check for shell scripts by extension, path, or shebang
+            IS_SHELL=false
+            if [[ "$file" == *.sh ]] || [[ "$file" == *.bash ]] || [[ "$file" == scripts/* ]] || [[ "$file" == "install_toolbox.sh" ]]; then
+              IS_SHELL=true
+            elif head -n1 "$file" 2>/dev/null | grep -qE "^#!.*/(bash|sh)"; then
+              IS_SHELL=true
+            fi
+            
+            if [[ "$IS_SHELL" == "true" ]]; then
+              SHELL_FILES="$SHELL_FILES $file"
+            fi
+          fi
+        done
+        
+        echo "shell-files<<EOF" >> $GITHUB_OUTPUT
+        echo "$SHELL_FILES" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        if [[ -n "$SHELL_FILES" ]]; then
+          echo "Found shell files: $SHELL_FILES"
+        else
+          echo "No shell files found in changed files"
+        fi
+
+    - name: Run shellcheck and create annotations
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        SHELL_FILES="${{ steps.changed-files.outputs.shell-files }}"
+        
+        if [[ -z "$SHELL_FILES" ]]; then
+          echo "No shell files to check"
+          exit 0
+        fi
+        
+        echo "Running shellcheck on: $SHELL_FILES"
+        
+        # Run shellcheck and capture output
+        EXIT_CODE=0
+        TOTAL_ISSUES=0
+        
+        for file in $SHELL_FILES; do
+          echo "Checking $file..."
+          
+          # Run shellcheck with JSON output for easier parsing
+          if shellcheck_output=$(shellcheck -f json "$file" 2>&1); then
+            echo "✓ $file passed shellcheck"
+          else
+            EXIT_CODE=1
+          fi
+          
+          # If there are issues, create annotations
+          if [[ -n "$shellcheck_output" ]] && [[ "$shellcheck_output" != "[]" ]]; then
+            echo "Processing shellcheck results for $file..."
+            
+            # Count issues
+            ISSUE_COUNT=$(echo "$shellcheck_output" | jq length)
+            TOTAL_ISSUES=$((TOTAL_ISSUES + ISSUE_COUNT))
+            
+            # Create annotations with appropriate severity levels
+            echo "$shellcheck_output" | jq -r '.[] | 
+              if .level == "error" then
+                "::error file=" + .file + ",line=" + (.line | tostring) + ",col=" + (.column | tostring) + ",title=Shellcheck Error (SC" + (.code | tostring) + ")::" + .message
+              elif .level == "warning" then
+                "::warning file=" + .file + ",line=" + (.line | tostring) + ",col=" + (.column | tostring) + ",title=Shellcheck Warning (SC" + (.code | tostring) + ")::" + .message
+              else
+                "::notice file=" + .file + ",line=" + (.line | tostring) + ",col=" + (.column | tostring) + ",title=Shellcheck Info (SC" + (.code | tostring) + ")::" + .message
+              end'
+          fi
+        done
+        
+        # Provide summary
+        if [[ $TOTAL_ISSUES -gt 0 ]]; then
+          echo "::warning::Shellcheck found $TOTAL_ISSUES issue(s) in shell scripts"
+        else
+          echo "::notice::All shell scripts passed shellcheck validation"
+        fi
+        
+        # Exit with error code if there were any issues (this will mark the check as failed)
+        if [[ $EXIT_CODE -ne 0 ]]; then
+          echo "::error::Shellcheck analysis completed with issues"
+          exit 1
+        fi
