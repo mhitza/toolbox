@@ -30,7 +30,7 @@ precmd () {
 }
 
 preexec () {
-  if [[ $@ == "#"* ]]; then
+  if [[ "$@" == "#"* ]]; then
     ask-llm "$@"
   fi
 }
@@ -68,6 +68,7 @@ alias -g T='| tee '
 alias -g X='| xargs '
 
 alias ack-symfony="ack --ignore-dir=var --ignore-dir=vendor --ignore-dir=node_modules --ignore-dir=public/build --type-add=twig:ext:twig --smart-case"
+alias branches-alive="git branch -vv --sort=-committerdate | grep '\[.*\]' | grep -v '\[.*: gone\]'"
 
 #
 export PATH="$PATH:$HOME/.local/bin"
