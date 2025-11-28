@@ -72,6 +72,7 @@ download "https://beyondgrep.com/ack-v3.9.0" && mv ack-v3.9.0 "$target_bin/ack" 
 symlink_local "$target_bin" ack
 
 
+symlink_local "$target_scripts" ansible-ssh
 symlink_local "$target_scripts" encrypt-for
 symlink_local "$target_scripts" decrypt-mine
 symlink_local "$target_scripts" ssh-delivery

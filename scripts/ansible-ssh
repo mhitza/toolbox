@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# ansible-ssh.sh - open an interactive SSH session using connection info from Ansible inventory
+# Usage: ansible-ssh.sh <inventory-host> [-- <ssh-args>...]
+set -euo pipefail
+
+if [ "${1:-}" = "" ]; then
+  echo "Usage: $0 <inventory-host> [-- <ssh-args>...]" >&2
+  exit 2
+fi
+HOST="$1"; shift || true
+
+if ! command -v ansible-inventory >/dev/null 2>&1; then
+  echo "ansible-inventory not found" >&2; exit 1
+fi
+if ! command -v jq >/dev/null 2>&1; then
+  echo "jq not found" >&2; exit 1
+fi
+
+json=$(ansible-inventory --host "$HOST") || { echo "host not found in inventory"; exit 3; }
+
+user=$(echo "$json" | jq -r '.ansible_user // .ansible_ssh_user // empty')
+host=$(echo "$json" | jq -r '.ansible_host // .ansible_ssh_host // .inventory_hostname // empty')
+key=$(echo "$json" | jq -r '.ansible_ssh_private_key_file // .ansible_private_key_file // empty')
+port=$(echo "$json" | jq -r '.ansible_port // 22')
+
+# defaults
+user=${user:-$(whoami)}
+host=${host:-$HOST}
+
+cmd=(ssh)
+[ -n "$key" ] && cmd+=( -i "$key" )
+[ -n "$port" ] && [ "$port" != "null" ] && cmd+=( -p "$port" )
+
+# pass any extra args from caller (after --)
+if [ "$#" -gt 0 ]; then
+  cmd+=( "$@" )
+fi
+
+cmd+=( "${user}@${host}" )
+echo "Executing: ${cmd[*]}"
+exec "${cmd[@]}"
